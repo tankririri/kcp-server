@@ -7,7 +7,7 @@ export PATH
 #   Author: Clang
 #   Intro:  http://koolshare.cn/forum-72-1.html
 #===============================================================================================
-version="2.0"
+version="2.1"
 str_program_dir="/usr/local/kcp-server"
 kcptun_latest="https://github.com/xtaci/kcptun/releases/latest"
 program_name="kcp-server"
@@ -360,7 +360,7 @@ function install_program_server_clang(){
     echo "11: xor"
     echo " n: none"
     echo "#####################################################"
-    read -p "Enter your choice (1, 2, 3, …… or exit. default [1]): " strcrypt
+    read -p "Enter your choice (1, 2, 3, ... or exit. default [1]): " strcrypt
     case "${strcrypt}" in
         1|[aA][eE][sS])
             strcrypt="aes"
@@ -517,6 +517,31 @@ cat > ${str_program_dir}/${program_config_file}<<-EOF
     "keepalive": 10
 }
 EOF
+cat > ${str_program_dir}/client.json<<-EOF
+{
+    "localaddr": ":1082",
+    "remoteaddr": "${defIP}:${set_kcptun_port}",
+    "key": "${set_kcptun_pwd}",
+    "crypt": "${strcrypt}",
+    "mode": "${strmode}",
+    "conn": 1,
+    "autoexpire": 60,
+    "mtu": ${strInputMTU},
+    "sndwnd": 128,
+    "rcvwnd": 1024,
+    "datashard": 70,
+    "parityshard": 30,
+    "dscp": 46,
+    "nocomp": ${set_kcptun_comp},
+    "acknodelay": false,
+    "nodelay": 0,
+    "interval": 40,
+    "resend": 0,
+    "nc": 0,
+    "sockbuf": 4194304,
+    "keepalive": 10
+}
+EOF
     rm -f ${str_program_dir}/${program_name} ${str_program_dir}/${program_socks5_filename}
     fun_download_file
     if [ ! -s ${kcp_init} ]; then
@@ -537,8 +562,8 @@ EOF
     if [ "$set_iptables" == 'y' ]; then
         check_iptables
         # iptables config
-        iptables -I INPUT -p udp --dport ${${set_kcptun_port}} -j ACCEPT
-        iptables -I INPUT -p tcp --dport ${${set_socks5_port}} -j ACCEPT
+        iptables -I INPUT -p udp --dport ${set_kcptun_port} -j ACCEPT
+        iptables -I INPUT -p tcp --dport ${set_socks5_port} -j ACCEPT
         iptables -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
         if [ "${OS}" == 'CentOS' ]; then
             service iptables save
@@ -739,4 +764,3 @@ update)
     echo "Usage: `basename $0` {install|uninstall|update|config}"
     ;;
 esac
-
